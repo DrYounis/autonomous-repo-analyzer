@@ -58,9 +58,13 @@ analyses_db: Dict[str, list] = {}
 # ── FastAPI App ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Autonomous Repo Analyzer API",
-    description="AI-powered GitHub repository revenue analysis",
+    description="API for analyzing repositories and tracking trends",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+async def startup_event():
+    print(f"✅ Autonomous System API started at {datetime.now().isoformat()}")
 
 app.add_middleware(
     CORSMiddleware,
