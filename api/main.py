@@ -5,7 +5,12 @@ SaaS API for AI-powered repository revenue analysis
 import os
 import sys
 import json
+import time
+import secrets
+import tempfile
+import subprocess
 import stripe
+import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
@@ -125,37 +130,25 @@ async def root():
         return FileResponse(dashboard)
     return HTMLResponse("<h1>Autonomous Repo Analyzer API</h1><p>Visit /docs for API documentation.</p>")
 
+# ── Service startup time tracking ────────────────────────────────────────────
+_service_start_time: float = time.time()
+
+
 @app.get("/health")
 async def health():
-    """Enhanced health check with startup delay and readiness"""
-    # Add a startup delay check
-    import time
-    startup_time = getattr(health, '_startup_time', None)
-    if startup_time is None:
-        health._startup_time = time.time()
-    
-    elapsed = time.time() - health._startup_time
-    if elapsed < 5:  # 5 second startup grace period
+    """Health check with startup grace period. Does NOT call external services."""
+    elapsed = time.time() - _service_start_time
+    if elapsed < 5:  # 5-second startup grace period
         return JSONResponse(
             status_code=503,
-            content={"status": "starting", "message": f"Service starting ({elapsed:.1f}s)"}
+            content={"status": "starting", "message": f"Service starting ({elapsed:.1f}s)"},
         )
-    
-    # Check database connection (if any)
-    try:
-        # Add any service-specific health checks here
-        # Example: check if GitHub API is accessible
-        import requests
-        test_response = requests.get("https://api.github.com", timeout=2)
-        if test_response.status_code != 200:
-            return {"status": "degraded", "timestamp": datetime.utcnow().isoformat(), 
-                    "message": "External service check failed"}
-    except Exception:
-        # Don't fail health check on external service issues
-        pass
-    
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat(), 
-            "uptime": f"{elapsed:.1f}s", "service": "autonomous-repo-analyzer"}
+    return {
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat(),
+        "uptime": f"{elapsed:.1f}s",
+        "service": "autonomous-repo-analyzer",
+    }
 
 @app.get("/plans")
 async def get_plans():
@@ -195,7 +188,6 @@ async def analyze_repository(
         }
 
         # Use a temp directory for cloning
-        import tempfile, subprocess
         with tempfile.TemporaryDirectory() as tmpdir:
             clone_path = Path(tmpdir) / repo_name
             token = request.github_token or os.getenv("GITHUB_TOKEN", "")
@@ -310,7 +302,6 @@ async def stripe_webhook(request_body: bytes, stripe_signature: str = Header(Non
         plan = session.get("metadata", {}).get("plan", "starter")
 
         # Create API key for new user
-        import secrets
         api_key = f"ara_{secrets.token_urlsafe(32)}"
         users_db[api_key] = {
             "email": email,
@@ -320,12 +311,12 @@ async def stripe_webhook(request_body: bytes, stripe_signature: str = Header(Non
             "analyses_this_month": 0,
             "stripe_customer_id": session.get("customer"),
         }
-        print(f"✅ New user: {email} | Plan: {plan} | Key: {api_key}")
+        logger.info(f"New user registered: {email} | Plan: {plan}")
         # In production: send API key via email (SendGrid)
 
     elif event["type"] == "customer.subscription.deleted":
         # Handle cancellation — mark user as inactive
-        print(f"⚠️  Subscription cancelled: {event['data']['object']}")
+        logger.warning(f"Subscription cancelled: {event['data']['object'].get('id', 'unknown')}")
 
     return {"received": True}
 
