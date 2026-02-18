@@ -12,9 +12,18 @@ from typing import Optional, List, Dict
 from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from pydantic import BaseModel
 import uvicorn
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 # Add parent directory to path for existing modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -64,7 +73,9 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
-    print(f"✅ Autonomous System API started at {datetime.now().isoformat()}")
+    logger.info(f"✅ Autonomous System API started at {datetime.now().isoformat()}")
+    logger.info(f"Available routes: {[route.path for route in app.routes]}")
+    logger.info("Configuration loaded successfully")
 
 app.add_middleware(
     CORSMiddleware,
