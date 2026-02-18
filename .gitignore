@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# State files
+.state.json
+*.state.json
+
+# Temp clones
+/tmp/
+/temp/
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V7
+.Trashes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Node (if any frontend tooling)
+node_modules/
