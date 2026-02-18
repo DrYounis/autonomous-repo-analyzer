@@ -1,6 +1,7 @@
 """
 Autonomous Workflow - Main Orchestration System
 """
+import os
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -19,7 +20,7 @@ from email_reporter import EmailReporter
 class AutonomousWorkflow:
     """Main orchestration system for autonomous development"""
     
-    def __init__(self, workspace_root: str = "/Volumes/Elements/AG"):
+    def __init__(self, workspace_root: str = os.environ.get("WORKSPACE_ROOT", "/tmp/workspace")):
         self.workspace_root = Path(workspace_root)
         self.github_manager = GitHubManager(workspace_root)
         self.revenue_analyzer = RevenueAnalyzer()
@@ -27,7 +28,7 @@ class AutonomousWorkflow:
         self.email_reporter = EmailReporter()
         
         # State management
-        self.state_file = self.workspace_root / "ai deveopers/autonomous-system/.state.json"
+        self.state_file = self.workspace_root / ".state.json"
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
         self.state = self._load_state()
     

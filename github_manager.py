@@ -12,7 +12,7 @@ from datetime import datetime
 class GitHubManager:
     """Manages GitHub repository operations"""
     
-    def __init__(self, workspace_root: str = "/Volumes/Elements/AG"):
+    def __init__(self, workspace_root: str = os.environ.get("WORKSPACE_ROOT", "/tmp/workspace")):
         self.workspace_root = Path(workspace_root)
         self.repos_cache_file = self.workspace_root / ".github_repos_cache.json"
         

@@ -1,6 +1,7 @@
 """
 Trend Tracker - AI Trend Monitoring and Auto-Update System
 """
+import os
 import json
 from datetime import datetime, timedelta
 from typing import List, Dict
@@ -12,7 +13,7 @@ class TrendTracker:
     
     def __init__(self, cache_dir: Path = None):
         if cache_dir is None:
-            cache_dir = Path("/Volumes/Elements/AG/ai deveopers/autonomous-system/.cache")
+            cache_dir = Path(os.environ.get("CACHE_DIR", "/tmp/autonomous-system/.cache"))
         
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
